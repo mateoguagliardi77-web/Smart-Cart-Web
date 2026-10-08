@@ -1,0 +1,125 @@
+// app.js
+// Lógica principal de la aplicación Smart-Cart
+
+let changoIdActual = "CH001";
+
+// =====================================================
+// NAVEGACIÓN Y MANEJO DE VISTAS
+// =====================================================
+function ocultarTodas() {
+  ['sec-rol', 'sec-op-login', 'sec-vincular', 'sec-usuario', 'sec-operario'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+}
+
+function volverAInicio() {
+  ocultarTodas();
+  document.getElementById('sec-rol').classList.remove('hidden');
+  document.getElementById('rol-badge').innerText = "Seleccionar Rol";
+}
+
+function iniciarUsuario() {
+  ocultarTodas();
+  document.getElementById('sec-vincular').classList.remove('hidden');
+  document.getElementById('rol-badge').innerText = "Usuario";
+}
+
+function mostrarLoginOperario() {
+  ocultarTodas();
+  document.getElementById('sec-op-login').classList.remove('hidden');
+  document.getElementById('rol-badge').innerText = "Operario";
+}
+
+// =====================================================
+// AUTENTICACIÓN DE OPERARIO Y VINCULACIÓN
+// =====================================================
+function validarOperario() {
+  const pin = document.getElementById('input-pin').value;
+  if (pin === "4321") {
+    ocultarTodas();
+    document.getElementById('sec-operario').classList.remove('hidden');
+  } else {
+    alert("PIN incorrecto. Intenta con 4321");
+  }
+}
+
+function vincularChanguito() {
+  changoIdActual = document.getElementById('input-chango-id').value.toUpperCase();
+
+  // Actualizar estado del carrito en Firebase
+  db.ref(`carritos/${changoIdActual}`).update({
+    estado: "OCUPADO",
+    modo_escaneo: "AGREGAR"
+  });
+
+  ocultarTodas();
+  document.getElementById('sec-usuario').classList.remove('hidden');
+  escucharChanguito();
+}
+
+// =====================================================
+// MODO ESCANEO Y TRANSMISIÓN EN TIEMPO REAL
+// =====================================================
+function cambiarModo(modo) {
+  db.ref(`carritos/${changoIdActual}`).update({ modo_escaneo: modo });
+  const txtModo = document.getElementById('txt-modo-escaneo');
+  txtModo.innerText = modo === 'AGREGAR' ? 'AGREGAR PRODUCTO' : 'QUITAR PRODUCTO';
+  txtModo.className = modo === 'AGREGAR' ? 'text-sm font-bold text-green-600' : 'text-sm font-bold text-red-600';
+}
+
+function escucharChanguito() {
+  db.ref(`carritos/${changoIdActual}`).on('value', snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    const contenedor = document.getElementById('contenedor-productos');
+    contenedor.innerHTML = '';
+
+    const productos = data.productos || {};
+    const resumen = data.resumen || { total_items: 0, subtotal: 0, descuento_total: 0, total_a_pagar: 0 };
+
+    Object.keys(productos).forEach(codigo => {
+      const item = productos[codigo];
+      contenedor.innerHTML += `
+        <div class="py-2 flex justify-between items-center">
+          <div>
+            <p class="text-sm font-bold text-gray-800">${item.nombre}</p>
+            <p class="text-xs text-gray-500">Cant: ${item.cantidad} x $item.preciounitario</p></div><divclass="text-right"><pclass="text-smfont-boldtext-gray-900">${item.subtotal_final}</p>
+            ${item.descuento > 0 ? `<p class="text-xs text-green-600">Ahorro: \$\${item.descuento}</p>` : ''}
+          </div>
+        </div>
+      `;
+    });
+
+    document.getElementById('badge-items').innerText = `${resumen.total_items} ítems`;
+    document.getElementById('txt-subtotal').innerText = `$resumen.subtotal`;document.getElementById('txt-descuento').innerText=`-resumen.descuentototal`;document.getElementById('txt-total').innerText=`${resumen.total_a_pagar}`;
+  });
+}
+
+// =====================================================
+// PANEL OPERARIO & PROCESO DE PAGO
+// =====================================================
+function guardarProductoOperario() {
+  const codigo = document.getElementById('op-codigo').value;
+  const nombre = document.getElementById('op-nombre').value;
+  const precio = parseFloat(document.getElementById('op-precio').value);
+  const oferta = document.getElementById('op-oferta').value;
+
+  db.ref(`productos/${codigo}`).update({
+    nombre: nombre,
+    precio: precio,
+    oferta_id: oferta
+  }).then(() => {
+    alert("Producto actualizado exitosamente en Firebase");
+  });
+}
+
+function procesarPago() {
+  alert("Redirigiendo a pasarela de pago...");
+  db.ref(`carritos/${changoIdActual}`).update({
+    estado: "LIBRE",
+    productos: {},
+    resumen: { total_items: 0, subtotal: 0, descuento_total: 0, total_a_pagar: 0 }
+  });
+  volverAInicio();
+}
