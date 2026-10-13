@@ -8,7 +8,8 @@ let changoIdActual = "CH001";
 // =====================================================
 function ocultarTodas() {
   ['sec-rol', 'sec-op-login', 'sec-vincular', 'sec-usuario', 'sec-operario'].forEach(id => {
-    document.getElementById(id).classList.add('hidden');
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
   });
 }
 
@@ -45,7 +46,7 @@ function validarOperario() {
 
 function vincularChanguito() {
   changoIdActual = document.getElementById('input-chango-id').value.toUpperCase();
-
+  
   // Actualizar estado del carrito en Firebase
   db.ref(`carritos/${changoIdActual}`).update({
     estado: "OCUPADO",
@@ -84,15 +85,20 @@ function escucharChanguito() {
         <div class="py-2 flex justify-between items-center">
           <div>
             <p class="text-sm font-bold text-gray-800">${item.nombre}</p>
-            <p class="text-xs text-gray-500">Cant: ${item.cantidad} x $item.preciounitario</p></div><divclass="text-right"><pclass="text-smfont-boldtext-gray-900">${item.subtotal_final}</p>
+            <p class="text-xs text-gray-500">Cant: ${item.cantidad} x $${item.precio_unitario}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-bold text-gray-900">$${item.subtotal_final}</p>
             ${item.descuento > 0 ? `<p class="text-xs text-green-600">Ahorro: \$\${item.descuento}</p>` : ''}
           </div>
         </div>
       `;
     });
 
-    document.getElementById('badge-items').innerText = `${resumen.total_items} ítems`;
-    document.getElementById('txt-subtotal').innerText = `$resumen.subtotal`;document.getElementById('txt-descuento').innerText=`-resumen.descuentototal`;document.getElementById('txt-total').innerText=`${resumen.total_a_pagar}`;
+    document.getElementById('badge-items').innerText = `${[suspicious link removed]_items} ítems`;
+    document.getElementById('txt-subtotal').innerText = `$${resumen.subtotal}`;
+    document.getElementById('txt-descuento').innerText = `-$${resumen.descuento_total}`;
+    document.getElementById('txt-total').innerText = `$${[suspicious link removed]_a_pagar}`;
   });
 }
 
