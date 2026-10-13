@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart-Cart Web App</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="[suspicious link removed]"></script>
+  <!-- Firebase App & Realtime Database SDKs -->
+  <script src="[suspicious link removed]"></script>
+  <script src="[suspicious link removed]"></script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen pb-10">
+
+  <!-- ENCABEZADO -->
+  <header class="bg-blue-700 text-white p-4 shadow-md flex justify-between items-center">
+    <h1 class="text-xl font-bold">🛒 Smart-Cart</h1>
+    <span id="rol-badge" class="bg-blue-900 text-xs px-3 py-1 rounded-full uppercase tracking-wider font-semibold">Seleccionar Rol</span>
+  </header>
+
+  <main class="max-w-md mx-auto p-4">
+
+    <!-- 1. SELECCIÓN DE ROL -->
+    <section id="sec-rol" class="bg-white p-6 rounded-xl shadow-md text-center mt-6">
+      <h2 class="text-lg font-bold mb-4 text-gray-800">Bienvenido a Smart-Cart</h2>
+      <p class="text-sm text-gray-600 mb-6">Selecciona la modalidad de ingreso:</p>
+      <div class="space-y-3">
+        <button onclick="iniciarUsuario()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+          Ingresar como Usuario
+        </button>
+        <button onclick="mostrarLoginOperario()" class="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900 transition">
+          Ingresar como Operario
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. LOGIN OPERARIO (PIN) -->
+    <section id="sec-op-login" class="hidden bg-white p-6 rounded-xl shadow-md text-center mt-6">
+      <h2 class="text-lg font-bold mb-2 text-gray-800">Acceso Operario</h2>
+      <p class="text-xs text-gray-500 mb-4">Ingresa tu PIN de seguridad (PIN Demo: 4321)</p>
+      <input type="password" id="input-pin" maxlength="4" placeholder="****" class="text-center text-2xl tracking-widest border border-gray-300 rounded-lg p-2 w-32 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <div class="flex gap-2">
+        <button onclick="volverAInicio()" class="w-1/2 bg-gray-300 text-gray-700 py-2 rounded-lg font-medium">Volver</button>
+        <button onclick="validarOperario()" class="w-1/2 bg-blue-600 text-white py-2 rounded-lg font-medium">Ingresar</button>
+      </div>
+    </section>
+
+    <!-- 3. VINCULACIÓN DE CHANGUITO -->
+    <section id="sec-vincular" class="hidden bg-white p-6 rounded-xl shadow-md text-center mt-6">
+      <h2 class="text-lg font-bold mb-2 text-gray-800">Vincular Changuito</h2>
+      <p class="text-sm text-gray-600 mb-4">Escanea el código QR del changuito o ingresa su número:</p>
+      <input type="text" id="input-chango-id" placeholder="Ej: CH001" value="CH001" class="border border-gray-300 rounded-lg p-3 w-full mb-4 text-center text-lg font-semibold uppercase">
+      <button onclick="vincularChanguito()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition">
+        Conectar Changuito
+      </button>
+    </section>
+
+    <!-- 4. PANEL DEL USUARIO (CARRITO) -->
+    <section id="sec-usuario" class="hidden space-y-4">
+      
+      <!-- ESTADO DE MODO ESCANEO -->
+      <div class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between">
+        <div>
+          <span class="text-xs text-gray-500 uppercase font-bold">Modo del Escáner Físico</span>
+          <p id="txt-modo-escaneo" class="text-sm font-bold text-green-600">AGREGAR PRODUCTO</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="cambiarModo('AGREGAR')" class="bg-green-100 text-green-700 text-xs px-3 py-2 rounded-lg font-bold">Agregar</button>
+          <button onclick="cambiarModo('QUITAR')" class="bg-red-100 text-red-700 text-xs px-3 py-2 rounded-lg font-bold">Quitar</button>
+        </div>
+      </div>
+
+      <!-- LISTA DE PRODUCTOS -->
+      <div class="bg-white p-4 rounded-xl shadow-md">
+        <h3 class="text-base font-bold text-gray-800 mb-3 border-b pb-2 flex justify-between">
+          <span>Productos en el Changuito</span>
+          <span id="badge-items" class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">0 ítems</span>
+        </h3>
+        <div id="contenedor-productos" class="divide-y divide-gray-100 max-h-60 overflow-y-auto">
+          <!-- Carga dinámica desde Firebase -->
+        </div>
+      </div>
+
+      <!-- RESUMEN Y PAGOS -->
+      <div class="bg-white p-4 rounded-xl shadow-md space-y-2">
+        <div class="flex justify-between text-sm text-gray-600">
+          <span>Subtotal:</span>
+          <span id="txt-subtotal" class="font-semibold">$0</span>
+        </div>
+        <div class="flex justify-between text-sm text-green-600">
+          <span>Descuentos / Ofertas:</span>
+          <span id="txt-descuento" class="font-semibold">-$0</span>
+        </div>
+        <hr>
+        <div class="flex justify-between text-lg font-bold text-gray-900 pt-1">
+          <span>Total a Pagar:</span>
+          <span id="txt-total" class="text-blue-700">$0</span>
+        </div>
+        <button onclick="procesarPago()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-center mt-3 hover:bg-blue-700 transition">
+          Pagar con Mercado Pago / Tarjetas
+        </button>
+      </div>
+    </section>
+
+    <!-- 5. PANEL DEL OPERARIO -->
+    <section id="sec-operario" class="hidden space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow-md">
+        <h3 class="text-base font-bold text-gray-800 mb-3 border-b pb-2">Gestión de Inventario y Precios</h3>
+        
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-bold text-gray-600">Código de Barras:</label>
+            <input type="text" id="op-codigo" value="7798180900502" class="border p-2 w-full rounded text-sm font-mono">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-600">Nombre del Producto:</label>
+            <input type="text" id="op-nombre" value="Caja de Herramientas 16''" class="border p-2 w-full rounded text-sm">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-bold text-gray-600">Precio ($):</label>
+              <input type="number" id="op-precio" value="18500" class="border p-2 w-full rounded text-sm">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-600">ID Oferta:</label>
+              <input type="text" id="op-oferta" value="OF003" class="border p-2 w-full rounded text-sm">
+            </div>
+          </div>
+          <button onclick="guardarProductoOperario()" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold text-sm">
+            Guardar Cambios
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- VINCULACIÓN DE ARCHIVOS JAVASCRIPT SEPARADOS -->
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
